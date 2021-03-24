@@ -7,6 +7,10 @@ var personRouter = require('./routes/person');
 
 var app = express();
 
+const basicAuth = require('express-basic-auth');
+app.use(basicAuth({users: { 'ATM123': 'pass123' }}))
+
+
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
