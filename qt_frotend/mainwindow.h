@@ -24,6 +24,8 @@ private slots:
     void on_btnGetFullName_clicked();
     void allPeopleSlot(QNetworkReply *reply);
 
+    void on_clear_clicked();
+
 private:
     Ui::MainWindow *ui;
     QNetworkAccessManager *allPeopleManager;
