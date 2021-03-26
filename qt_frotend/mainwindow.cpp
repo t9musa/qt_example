@@ -32,17 +32,23 @@ void MainWindow::on_btnGetAllPeople_clicked()
 void MainWindow::on_btnGetOnePerson_clicked()
 {
     QString id=ui->lineEdit->text();
-    QString site_url="http://localhost:3000/example/oneperson/"+id;
-    QString credentials="ATM123:pass123";
-    QNetworkRequest request((site_url));
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    QByteArray data = credentials.toLocal8Bit().toBase64();
-    QString headerData = "Basic " + data;
-    request.setRawHeader( "Authorization", headerData.toLocal8Bit() );
-    onePersonManager = new QNetworkAccessManager(this);
-    connect(onePersonManager, SIGNAL(finished (QNetworkReply*)),
-    this, SLOT(onePersonSlot(QNetworkReply*)));
-    onePersonReply = onePersonManager->get(request);
+    if(id==""){
+        ui->label->setText("Annan ID");
+    }
+    else{
+        QString site_url="http://localhost:3000/example/oneperson/"+id;
+        QString credentials="ATM123:pass123";
+        QNetworkRequest request((site_url));
+        request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+        QByteArray data = credentials.toLocal8Bit().toBase64();
+        QString headerData = "Basic " + data;
+        request.setRawHeader( "Authorization", headerData.toLocal8Bit() );
+        onePersonManager = new QNetworkAccessManager(this);
+        connect(onePersonManager, SIGNAL(finished (QNetworkReply*)),
+        this, SLOT(onePersonSlot(QNetworkReply*)));
+        onePersonReply = onePersonManager->get(request);
+    }
+
 }
 
 void MainWindow::on_btnGetFullName_clicked()
@@ -65,7 +71,7 @@ void MainWindow::allPeopleSlot(QNetworkReply *reply)
 {
     QByteArray response_data=reply->readAll();
     qDebug()<<response_data;
-    if(response_data.compare("-4078")==0){
+    if(response_data.compare("-4078")==0 || response_data.compare("")==0){
         ui->label->setText("Virhe tietokantayhteydessä");
     }
     else{
@@ -134,8 +140,56 @@ void MainWindow::fullNameSlot(QNetworkReply *reply)
     fullNameManager->deleteLater();
 }
 
+void MainWindow::raiseSlot(QNetworkReply *reply)
+{
+    QByteArray response_data=reply->readAll();
+    qDebug()<<response_data;
+    if(response_data.compare("-4078")==0)
+    {
+        ui->label->setText("Virhe tietokantayhteydessä");
+    }
+    else if(response_data.compare("0")==0)
+    {
+        ui->label->setText("Nosto ei onnistu");
+    }
+    else
+    {
+        ui->label->setText("Nosto onnistui!");
+    }
+    raiseReply->deleteLater();
+    reply->deleteLater();
+    raiseManager->deleteLater();
+}
+
 void MainWindow::on_clear_clicked()
 {
     ui->label->setText(" ");
     ui->lineEdit->setText(" ");
+}
+
+void MainWindow::on_btnRaise_clicked()
+{
+    QString id=ui->lineEditRaiseID->text();
+    QString amount=ui->lineEditRaiseAmount->text();
+    QJsonObject json_obj;
+    json_obj.insert("id",id);
+    json_obj.insert("amount",amount);
+    QString site_url="http://localhost:3000/person/money_action";
+    QString credentials="ATM123:pass123";
+    QNetworkRequest request((site_url)); request.setHeader(QNetworkRequest::ContentTypeHeader,
+    "application/json");
+    QByteArray data = credentials.toLocal8Bit().toBase64();
+    QString headerData = "Basic " + data;
+    request.setRawHeader( "Authorization", headerData.toLocal8Bit() ); raiseManager = new
+    QNetworkAccessManager(this);
+    raiseManager = new QNetworkAccessManager(this);
+    connect(raiseManager, SIGNAL(finished (QNetworkReply*)),
+    this, SLOT(raiseSlot(QNetworkReply*)));
+    raiseReply = raiseManager->post(request, QJsonDocument(json_obj).toJson());
+}
+
+
+void MainWindow::on_lineEdit_textChanged(const QString &arg1)
+{
+    ui->btnGetFullName->setEnabled(true);
 }
