@@ -36,22 +36,34 @@ void MainWindow::on_btnGetOnePerson_clicked()
 
 void MainWindow::on_btnGetFullName_clicked()
 {
-
+    QString site_url="http://localhost:3000/example/allpeople";
+    QString credentials="ATM123:pass123";
+    QNetworkRequest request((site_url));
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    QByteArray data = credentials.toLocal8Bit().toBase64();
+    QString headerData = "Basic " + data;
+    request.setRawHeader( "Authorization", headerData.toLocal8Bit() );
 }
 
 void MainWindow::allPeopleSlot(QNetworkReply *reply)
 {
     QByteArray response_data=reply->readAll();
     qDebug()<<response_data;
-    QJsonDocument json_doc = QJsonDocument::fromJson(response_data);
-    QJsonArray json_array = json_doc.array();
-    QString people;
-    foreach (const QJsonValue &value, json_array) {
-    QJsonObject json_obj = value.toObject();
-    people+=QString::number(json_obj["id_person"].toInt())+"."+json_obj["fname"].toString()+" " +json_obj["lname"].toString()+": ";
-    people+=QString::number(json_obj["money"].toDouble())+"\r\n";
+    if(response_data.compare("-4078")==0){
+        ui->label->setText("Virhe tietokantayhteydessä");
+    }
+    else {
+        QJsonDocument json_doc = QJsonDocument::fromJson(response_data);
+        QJsonArray json_array = json_doc.array();
+        QString people;
+        foreach (const QJsonValue &value, json_array) {
+        QJsonObject json_obj = value.toObject();
+        people+=QString::number(json_obj["id_person"].toInt())      +"."+json_obj["fname"].toString()+
+        " " +json_obj["lname"].toString()+": "+(QString::number(json_obj["money"].toDouble()))+"\r\n";
     }
     ui->label->setText(people);
+    }
+
 
     //ui->textEditResults->setText(book);
     allPeopleReply->deleteLater();
